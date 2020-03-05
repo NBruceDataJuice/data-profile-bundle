@@ -1,0 +1,7 @@
+target/
+*/target/
+*/target/*
+.idea/
+nifi-data-profiler-nar.iml
+nifi-data-profiler-processors.iml
+data-profiler-bundle.iml
