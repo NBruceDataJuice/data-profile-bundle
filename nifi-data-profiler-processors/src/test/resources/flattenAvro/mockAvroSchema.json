@@ -1,0 +1,65 @@
+{
+  "type" : "record",
+  "name" : "AccountManagementEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "header",
+    "type" : {
+      "type" : "record",
+      "name" : "EventHeader",
+      "fields" : [ {
+        "name" : "memberId",
+        "type" : "int",
+        "doc" : "The LinkedIn member ID of the user initiating the action.  LinkedIn member IDs are integers greater than zero.  Guests are represented either as zero or a negative number."
+      }, {
+        "name" : "time",
+        "type" : "long",
+        "doc" : "The time of the event"
+      }, {
+        "name" : "service",
+        "type" : "string",
+        "doc" : "The name of the service. Synonymous to the com.linkedin.events.monitoring.EventHeader#container field."
+      } ]
+    },
+    "doc" : "Contains memberId and current timestamp"
+  }, {
+    "name" : "isSuccessful",
+    "type" : "boolean"
+  }, {
+    "name" : "state",
+    "type" : {
+      "type" : "enum",
+      "name" : "AccountManagementState",
+      "symbols" : [ "RETRY", "REQUEUE", "ABORTED", "DONE", "PRECONDITION_CHECK_FAILED" ]
+    },
+    "doc" : "What is the current state of the account management request?"
+  }, {
+    "name" : "source",
+    "type" : {
+      "type" : "enum",
+      "name" : "AccountManagementSource",
+      "symbols" : [ "CSTOOL_REP", "MEMBER" ]
+    },
+    "doc" : "Who performed the action?"
+  }, {
+    "name" : "action",
+    "type" : {
+      "type" : "enum",
+      "name" : "AccountManagementAction",
+      "symbols" : [ "CLOSE_ACCOUNT", "REACTIVATE_ACCOUNT", "MERGE_ACCOUNT", "PURGE_ACCOUNT", "DELETE_ACCOUNT", "INVALIDATE_SPAM_ACCOUNT", "SEND_REMINDER_EMAIL", "CAP_SEAT_TRANSFER", "RESET_PAYMENT", "SUSPEND_ACCOUNT", "UNSUSPEND_ACCOUNT", "EXPORT_DATA", "ARCHIVE_DATA", "PURGE_ARCHIVED_DATA" ]
+    },
+    "doc" : "What action was requested?"
+  }, {
+    "name" : "processStartTime",
+    "type" : "long",
+    "doc" : "Timestamp when the account management process started."
+  }, {
+    "name" : "requestTime",
+    "type" : "long",
+    "doc" : "Timestamp when the request entered the AMS queue."
+  }, {
+    "name" : "numAttempts",
+    "type" : "int",
+    "doc" : "Number of times this request has been attempted. This number is reset everytime we re-enqueue a request."
+  } ]
+}
