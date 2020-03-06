@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -99,7 +100,6 @@ public class Util {
             }
             dataFileWriter.flush();
         }
-
     }
 
     static Map<String, String> createFieldMapping(Schema outputSchema){
@@ -176,8 +176,8 @@ public class Util {
         Map<String, List<String>> datatypeMap = createDatatypeMapping(flatAvroSchema.get());
         // We are going to go through datatypeMap and for each column present, we are going to get the descriptive stats
         // for that column, 1 column at a time, and add it to the statsMap
-        for (Map.Entry<String, List<String>> entry : datatypeMap.entrySet()) {
-            for (String column : entry.getValue()) {
+        for( Map.Entry<String, List<String>> entry : datatypeMap.entrySet() ){
+            for( String column : entry.getValue() ){
                 session.read(flowFile, inputStream -> {
                     DatumReader<GenericData.Record> datumReader = new GenericDatumReader<>();
                     DataFileStream<GenericData.Record> stream = new DataFileStream<>(inputStream, datumReader);
@@ -193,6 +193,7 @@ public class Util {
                         case "string":
                             descriptiveStatisticsString(column, stream);
                             break;
+
                         default:
                             break;
                     }
@@ -272,25 +273,42 @@ public class Util {
     }
 
     // TODO expand on this. Add the option of more in depth stats. Also, add in a property to make this optional
+    // TODO need a way to break out of this based on the size of the strings. Should be configurable
     private static void descriptiveStatisticsString(String column, DataFileStream < GenericData.Record > stream){
         int numRows = 0;
         int nullRows = 0;
+        BigInteger totalLength = BigInteger.ZERO;
+        int totalWhitespace = 0;
+        int totalTokens = 0;
+
         Map<String, Integer> valueCounter = new HashMap<>();
         for (GenericRecord record: stream){
 
             if( record.get(column) == null){
                 nullRows++;
             } else {
-                if (valueCounter.get(record.get(column).toString()) == null){
-                    valueCounter.put(record.get(column).toString(), 0);
+                String value = record.get(column).toString();
+                if ( valueCounter.get(value) == null ){
+                    valueCounter.put(value, 0);
                 }
-                valueCounter.put(record.get(column).toString(), valueCounter.get(record.get(column).toString()) + 1);
+                valueCounter.put(value, valueCounter.get(value) + 1);
+
+                totalLength.add( new BigInteger(String.valueOf(value.length())) );
+                for( int i = 0; i < value.length(); i++ ) {
+                    if( Character.isWhitespace(value.charAt(i)) ){
+                        totalWhitespace++;
+                    }
+                }
+
+                // TODO would be great to make this more
+                totalTokens += value.split(" ").length;
             }
+
             numRows++;
         }
 
         final double nullPct;
-        if (numRows > 0){
+        if ( numRows > 0 ){
             nullPct = 1 - nullRows / numRows;
         } else{
             nullPct = -1;
