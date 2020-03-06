@@ -1,12 +1,25 @@
 package io.datajuice.nifi.processors.data.profiler;
 
 import org.apache.avro.Schema;
+import org.apache.avro.file.DataFileStream;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.io.DatumReader;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.nifi.util.MockFlowFile;
+import org.apache.nifi.util.TestRunner;
+import org.apache.nifi.util.TestRunners;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class TestUtil {
 
@@ -18,7 +31,21 @@ public class TestUtil {
                 .parse(TestUtil.class.getClassLoader().getResourceAsStream("flattenAvro/" + filename));
     }
 
+    TestRunner testRunner;
+    @Before
+    public void init() {
+        testRunner =  TestRunners.newTestRunner(DataProfiler.class);
+    }
 
+    @Test
+    public void testIterateDatatypeMap() throws IOException{
+
+        FileInputStream avroFile = new FileInputStream("src/test/resources/avroDir/mockAvroOutput.avro");
+        testRunner.enqueue(avroFile);
+        testRunner.run();
+        List<MockFlowFile> results = testRunner.getFlowFilesForRelationship(Relationships.SUCCESS);
+        MockFlowFile result = results.get(0);
+    }
 
     @Test
     public void testCreateFieldMapping() throws IOException{
@@ -32,6 +59,18 @@ public class TestUtil {
             System.out.println(flattenSource + "  " + field.name());
 
         }
+    }
+
+    @Test
+    public void testCreateDatatypeMapping() throws IOException{
+        Schema originalSchema = readSchemaFromJsonFile("mockAvroSchema.json");
+        Schema newSchema = Util.flatten(originalSchema, true);
+
+        Map<String, List<String>> testDatatypeMapping = new Util().createDatatypeMapping(newSchema);
+        for (Map.Entry entry: testDatatypeMapping.entrySet()){
+            System.out.println(entry.getKey() + ": " + entry.getValue());
+        }
+
     }
 
     /**
