@@ -1,5 +1,7 @@
 package io.datajuice.nifi.processors.data.profiler;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
+import com.sun.tools.javah.Gen;
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileReader;
@@ -12,6 +14,9 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
 
 import org.apache.commons.math3.stat.descriptive.*;
@@ -22,9 +27,7 @@ import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.processor.ProcessSession;
 import org.apache.nifi.processors.kite.AvroRecordConverter;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
@@ -319,6 +322,70 @@ public class Util {
             System.out.println(entry.getKey() + ": " + entry.getValue());
         }
 
+    }
+
+    static void csvToAvro(Schema schema, File file) throws IOException {
+        CSVParser csvParser = CSVFormat.DEFAULT.parse(new InputStreamReader(new FileInputStream(file)));
+        boolean first = true;
+
+        DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<>(schema);
+        DataFileWriter<GenericRecord> dataFileWriter = new DataFileWriter<GenericRecord>(datumWriter);
+        //dataFileWriter.setCodec(CodecFactory.snappyCodec());
+        dataFileWriter.create(schema, new FileOutputStream(new File("src/test/resources/kaggle/investments_VC_uncompressed.avro")));
+
+        for(CSVRecord record: csvParser.getRecords()){
+            if ( first ){
+                first = false;
+                continue;
+            }
+
+            GenericRecord avroRecord = new GenericData.Record(schema);
+            int i = 0;
+            for(Schema.Field field: schema.getFields()){
+                switch (field.schema().getType()){
+                    case RECORD:
+                        break;
+                    case ENUM:
+                        break;
+                    case ARRAY:
+                        break;
+                    case MAP:
+                        break;
+                    case UNION:
+                        break;
+                    case FIXED:
+                        break;
+                    case STRING:
+                        avroRecord.put(field.name(),record.get(i));
+                        break;
+                    case BYTES:
+                        avroRecord.put(field.name(), record.get(i).getBytes());
+                        break;
+                    case INT:
+                        avroRecord.put(field.name(), Integer.parseInt(record.get(i)));
+                        break;
+                    case LONG:
+                        avroRecord.put(field.name(), Long.parseLong(record.get(i)));
+                        break;
+                    case FLOAT:
+                        avroRecord.put(field.name(), Float.parseFloat(record.get(i)));
+                        break;
+                    case DOUBLE:
+                        avroRecord.put(field.name(), Double.parseDouble(record.get(i)));
+                        break;
+                    case BOOLEAN:
+                        avroRecord.put(field.name(), Boolean.parseBoolean(record.get(i)));
+                        break;
+                    case NULL:
+                        break;
+                }
+
+                i++;
+            }
+            dataFileWriter.append(avroRecord);
+        }
+
+        dataFileWriter.close();
     }
 }
 

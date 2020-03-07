@@ -13,10 +13,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,11 +37,19 @@ public class TestUtil {
     @Test
     public void testIterateDatatypeMap() throws IOException{
 
-        FileInputStream avroFile = new FileInputStream("src/test/resources/avroDir/mockAvroOutput.avro");
+        FileInputStream avroFile = new FileInputStream("src/test/resources/kaggle/investments_VC.avro");
         testRunner.enqueue(avroFile);
         testRunner.run();
         List<MockFlowFile> results = testRunner.getFlowFilesForRelationship(Relationships.SUCCESS);
         MockFlowFile result = results.get(0);
+    }
+
+    @Test
+    public void testCsvConverter() throws IOException{
+        File file = new File("src/test/resources/kaggle/investments_VC.csv");
+        FileInputStream avscInputStream = new FileInputStream("src/test/resources/kaggle/investments_VC.avsc");
+        Schema originalSchema = new Schema.Parser().parse(avscInputStream);
+        Util.csvToAvro(originalSchema, file);
     }
 
     @Test
