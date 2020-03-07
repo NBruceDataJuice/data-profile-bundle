@@ -5,3 +5,6 @@ target/
 nifi-data-profiler-nar.iml
 nifi-data-profiler-processors.iml
 data-profiler-bundle.iml
+investments_VC.bad
+investments_VC_uncompressed.avro
+investments_VC.csv
