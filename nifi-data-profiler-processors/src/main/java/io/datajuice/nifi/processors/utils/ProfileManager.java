@@ -2,9 +2,7 @@ package io.datajuice.nifi.processors.utils;
 
 import io.datajuice.nifi.processors.descriptor.BooleanColumn;
 import io.datajuice.nifi.processors.descriptor.NumericColumn;
-import io.datajuice.nifi.processors.descriptor.Profile;
 import io.datajuice.nifi.processors.descriptor.StringColumn;
-
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileStream;
