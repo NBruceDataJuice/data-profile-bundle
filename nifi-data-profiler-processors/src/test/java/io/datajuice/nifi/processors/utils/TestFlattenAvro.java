@@ -1,5 +1,7 @@
-package io.datajuice.nifi.processors.data.profiler;
+package io.datajuice.nifi.processors.utils;
 
+import io.datajuice.nifi.processors.FlattenAvro;
+import io.datajuice.nifi.processors.Relationships;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;

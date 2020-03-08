@@ -1,6 +1,6 @@
-package io.datajuice.nifi.processors.data.profiler;
+package io.datajuice.nifi.processors;
 
-import org.apache.nifi.annotation.lifecycle.OnScheduled;
+import io.datajuice.nifi.processors.utils.Convert;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.processor.*;
 import org.apache.nifi.processor.exception.ProcessException;
@@ -8,8 +8,8 @@ import org.apache.nifi.processor.exception.ProcessException;
 import java.beans.PropertyDescriptor;
 import java.util.*;
 
-import static io.datajuice.nifi.processors.data.profiler.Relationships.FAILURE;
-import static io.datajuice.nifi.processors.data.profiler.Relationships.SUCCESS;
+import static io.datajuice.nifi.processors.Relationships.FAILURE;
+import static io.datajuice.nifi.processors.Relationships.SUCCESS;
 
 public class FlattenAvro extends AbstractProcessor {
 
@@ -44,7 +44,7 @@ public class FlattenAvro extends AbstractProcessor {
 
         // TODO add ability to write bad records to a separate file
         try{
-            session.write(incomingAvro, Util::convertAvroFile);
+            session.write(incomingAvro, Convert::convertAvroFile);
         } catch (Exception e){
             session.transfer(incomingAvro, FAILURE);
             return;

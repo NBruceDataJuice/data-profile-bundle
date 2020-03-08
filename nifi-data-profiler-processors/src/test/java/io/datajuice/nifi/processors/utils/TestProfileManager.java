@@ -1,10 +1,8 @@
-package io.datajuice.nifi.processors.data.profiler;
+package io.datajuice.nifi.processors.utils;
 
+import io.datajuice.nifi.processors.DataProfiler;
+import io.datajuice.nifi.processors.Relationships;
 import org.apache.avro.Schema;
-import org.apache.avro.file.DataFileStream;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.io.DatumReader;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.nifi.util.MockFlowFile;
 import org.apache.nifi.util.TestRunner;
@@ -14,18 +12,17 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.*;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TestUtil {
+public class TestProfileManager {
 
-    Util util = new Util();
+    ProfileManager profileManager = new ProfileManager();
 
     private static Schema readSchemaFromJsonFile(String filename)
             throws IOException {
         return new Schema.Parser()
-                .parse(TestUtil.class.getClassLoader().getResourceAsStream("flattenAvro/" + filename));
+                .parse(TestProfileManager.class.getClassLoader().getResourceAsStream("flattenAvro/" + filename));
     }
 
     TestRunner testRunner;
@@ -42,20 +39,21 @@ public class TestUtil {
         testRunner.run();
         List<MockFlowFile> results = testRunner.getFlowFilesForRelationship(Relationships.SUCCESS);
         MockFlowFile result = results.get(0);
+        OutputStream os = new FileOutputStream("src/test/resources/kaggle/investments_VC_profile.avro");
+        os.write(result.toByteArray());
     }
 
-    @Test
     public void testCsvConverter() throws IOException{
         File file = new File("src/test/resources/kaggle/investments_VC.csv");
         FileInputStream avscInputStream = new FileInputStream("src/test/resources/kaggle/investments_VC.avsc");
         Schema originalSchema = new Schema.Parser().parse(avscInputStream);
-        Util.csvToAvro(originalSchema, file);
+        Convert.csvToAvro(originalSchema, file);
     }
 
     @Test
     public void testCreateFieldMapping() throws IOException{
         Schema originalSchema = readSchemaFromJsonFile("mockAvroSchema.json");
-        Schema newSchema = Util.flatten(originalSchema, true);
+        Schema newSchema = Flatten.flatten(originalSchema, true);
         for (Schema.Field field: newSchema.getFields()){
             String flattenSource = field.getProp("flatten_source");
             if (StringUtils.isBlank(flattenSource)) {
@@ -69,9 +67,10 @@ public class TestUtil {
     @Test
     public void testCreateDatatypeMapping() throws IOException{
         Schema originalSchema = readSchemaFromJsonFile("mockAvroSchema.json");
-        Schema newSchema = Util.flatten(originalSchema, true);
+        Schema newSchema = Flatten.flatten(originalSchema, true);
 
-        Map<String, List<String>> testDatatypeMapping = new Util().createDatatypeMapping(newSchema);
+        new ProfileManager();
+        Map<String, List<String>> testDatatypeMapping = ProfileManager.createDatatypeMapping(newSchema);
         for (Map.Entry entry: testDatatypeMapping.entrySet()){
             System.out.println(entry.getKey() + ": " + entry.getValue());
         }
@@ -90,7 +89,7 @@ public class TestUtil {
         Schema originalSchema = readSchemaFromJsonFile("recordWithinRecord_original.json");
         Schema expectedSchema = readSchemaFromJsonFile("recordWithinRecord_flattened.json");
 
-        Assert.assertEquals(new Util().flatten(originalSchema, false), expectedSchema);
+        Assert.assertEquals(Flatten.flatten(originalSchema, false), expectedSchema);
     }
 
     /**
@@ -111,7 +110,7 @@ public class TestUtil {
         Schema originalSchema = readSchemaFromJsonFile("recordWithinRecordWithinRecord_original.json");
         Schema expectedSchema = readSchemaFromJsonFile("recordWithinRecordWithinRecord_flattened.json");
 
-        Assert.assertEquals(new Util().flatten(originalSchema, false), expectedSchema);
+        Assert.assertEquals(Flatten.flatten(originalSchema, false), expectedSchema);
     }
 
     /**
@@ -126,7 +125,7 @@ public class TestUtil {
         Schema originalSchema = readSchemaFromJsonFile("recordWithinOptionWithinRecord_original.json");
         Schema expectedSchema = readSchemaFromJsonFile("recordWithinOptionWithinRecord_flattened.json");
 
-        Assert.assertEquals(new Util().flatten(originalSchema, false), expectedSchema);
+        Assert.assertEquals(Flatten.flatten(originalSchema, false), expectedSchema);
     }
 
     /**
@@ -141,7 +140,7 @@ public class TestUtil {
         Schema originalSchema = readSchemaFromJsonFile("recordWithinUnionWithinRecord_original.json");
         Schema expectedSchema = readSchemaFromJsonFile("recordWithinUnionWithinRecord_flattened.json");
 
-        Assert.assertEquals(new Util().flatten(originalSchema, false), expectedSchema);
+        Assert.assertEquals(Flatten.flatten(originalSchema, false), expectedSchema);
     }
 
     /**
@@ -162,7 +161,7 @@ public class TestUtil {
         Schema originalSchema = readSchemaFromJsonFile("optionWithinOptionWithinRecord_original.json");
         Schema expectedSchema = readSchemaFromJsonFile("optionWithinOptionWithinRecord_flattened.json");
 
-        Assert.assertEquals(new Util().flatten(originalSchema, false), expectedSchema);
+        Assert.assertEquals(Flatten.flatten(originalSchema, false), expectedSchema);
     }
 
     /**
@@ -184,7 +183,7 @@ public class TestUtil {
         Schema originalSchema = readSchemaFromJsonFile("recordWithinArrayWithinArray_original.json");
         Schema expectedSchema = readSchemaFromJsonFile("recordWithinArrayWithinArray_flattened.json");
 
-        Assert.assertEquals(new Util().flatten(originalSchema, false), expectedSchema);
+        Assert.assertEquals(Flatten.flatten(originalSchema, false), expectedSchema);
     }
 
     /**
@@ -210,7 +209,7 @@ public class TestUtil {
         Schema originalSchema = readSchemaFromJsonFile("arrayWithinRecordWithinArrayWithinRecord_original.json");
         Schema expectedSchema = readSchemaFromJsonFile("arrayWithinRecordWithinArrayWithinRecord_flattened.json");
 
-        Assert.assertEquals(new Util().flatten(originalSchema, false), expectedSchema);
+        Assert.assertEquals(Flatten.flatten(originalSchema, false), expectedSchema);
     }
 
     /**
@@ -232,6 +231,6 @@ public class TestUtil {
         Schema originalSchema = readSchemaFromJsonFile("recordWithinMapWithinMap_original.json");
         Schema expectedSchema = readSchemaFromJsonFile("recordWithinMapWithinMap_flattened.json");
 
-        Assert.assertEquals(Util.flatten(originalSchema, false), expectedSchema);
+        Assert.assertEquals(Flatten.flatten(originalSchema, false), expectedSchema);
     }
 }

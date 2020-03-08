@@ -15,13 +15,12 @@
  * limitations under the License.
  */
 
-package io.datajuice.nifi.processors.data.profiler;
+package io.datajuice.nifi.processors.utils;
 
 import java.io.IOException;
 import org.apache.avro.Schema;
 import org.apache.gobblin.util.AvroFlattener;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 

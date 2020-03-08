@@ -1,4 +1,4 @@
-package io.datajuice.nifi.processors.data.profiler;
+package io.datajuice.nifi.processors;
 
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.processor.*;
@@ -7,12 +7,14 @@ import org.apache.nifi.processor.exception.ProcessException;
 import java.beans.PropertyDescriptor;
 import java.util.*;
 
-import static io.datajuice.nifi.processors.data.profiler.Relationships.FAILURE;
-import static io.datajuice.nifi.processors.data.profiler.Relationships.SUCCESS;
-import static io.datajuice.nifi.processors.data.profiler.Util.iterateDatatypeMap;
+import static io.datajuice.nifi.processors.Relationships.*;
+import static io.datajuice.nifi.processors.utils.ProfileManager.profileManager;
 
 public class DataProfiler extends AbstractProcessor {
-    // TODO analysis to understand what properties would be useful
+    // TODO analysis to understand what properties would be useful Initial thoughts
+    //  1) A config that tells exactly what type each column is. Could work off of something like filename,
+    //      to allow for multiple mappings to live in single file OR make a user route on that attribute before hand
+    //  2) Config that tells each profiler what columns to profile
     private List<PropertyDescriptor> properties;
     private Set<Relationship> relationships;
 
@@ -36,19 +38,17 @@ public class DataProfiler extends AbstractProcessor {
             throws ProcessException {
 
 
-        FlowFile incomingAvro = session.get();
-        if (incomingAvro == null) {
+        FlowFile flowFile = session.get();
+        if (flowFile == null) {
             return;
         }
 
         // TODO add ability to write bad records to a separate file
         try{
-            iterateDatatypeMap(session, incomingAvro);
+            session.transfer(profileManager(session, flowFile), SUCCESS);
+            session.remove(flowFile);
         } catch (Exception e){
-            session.transfer(incomingAvro, FAILURE);
-            return;
+            session.transfer(flowFile, FAILURE);
         }
-
-        session.transfer(incomingAvro, SUCCESS);
     }
 }
