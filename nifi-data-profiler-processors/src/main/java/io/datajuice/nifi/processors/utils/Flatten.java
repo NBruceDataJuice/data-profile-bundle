@@ -1,22 +1,15 @@
 package io.datajuice.nifi.processors.utils;
 
 import org.apache.avro.Schema;
-import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileStream;
-import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.DatumWriter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.gobblin.util.AvroFlattener;
-import org.apache.nifi.processors.kite.AvroRecordConverter;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -51,8 +44,6 @@ public class Flatten {
 
         return (Schema) method.invoke(avroFlattener, inputSchema, flattenComplextTypes, flattenHierarchy);
     }
-
-
 
     static Map<String, String> createFieldMapping(Schema outputSchema){
         Map<String, String> fieldMapping = new HashMap<>();

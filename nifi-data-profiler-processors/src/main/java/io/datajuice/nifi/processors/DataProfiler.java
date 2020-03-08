@@ -1,14 +1,16 @@
 package io.datajuice.nifi.processors;
 
+import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.flowfile.FlowFile;
+import org.apache.nifi.flowfile.attributes.CoreAttributes;
 import org.apache.nifi.processor.*;
 import org.apache.nifi.processor.exception.ProcessException;
 
-import java.beans.PropertyDescriptor;
 import java.util.*;
 
 import static io.datajuice.nifi.processors.Relationships.*;
 import static io.datajuice.nifi.processors.utils.ProfileManager.profileManager;
+import static org.apache.nifi.flowfile.attributes.CoreAttributes.MIME_TYPE;
 
 public class DataProfiler extends AbstractProcessor {
     // TODO analysis to understand what properties would be useful Initial thoughts
@@ -25,6 +27,7 @@ public class DataProfiler extends AbstractProcessor {
 
         Set<Relationship> relationships = new HashSet<>();
         relationships.add(SUCCESS);
+        relationships.add(FAILURE);
         this.relationships = Collections.unmodifiableSet(relationships);
     }
 
@@ -45,7 +48,9 @@ public class DataProfiler extends AbstractProcessor {
 
         // TODO add ability to write bad records to a separate file
         try{
-            session.transfer(profileManager(session, flowFile), SUCCESS);
+            FlowFile newFlowFile = profileManager(session, flowFile);
+            session.putAttribute(newFlowFile, CoreAttributes.MIME_TYPE.key(), "application/avro+binary");
+            session.transfer(newFlowFile, SUCCESS);
             session.remove(flowFile);
         } catch (Exception e){
             session.transfer(flowFile, FAILURE);
